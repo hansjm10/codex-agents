@@ -68,6 +68,9 @@ pub enum AgentEventPayload {
         run_id: String,
         assignment_id: String,
     },
+    CodexSessionStarted {
+        session_id: String,
+    },
     StateChanged {
         from: RunState,
         to: RunState,
