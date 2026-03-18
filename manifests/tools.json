@@ -1,0 +1,159 @@
+{
+  "version": 1,
+  "tools": [
+    {
+      "name": "cargo",
+      "description": "Run repository Rust validation and tests.",
+      "executable": "cargo",
+      "default_args": [],
+      "state": "stable",
+      "supports_json": false,
+      "timeout_policy": {
+        "soft_timeout_seconds": 600,
+        "hard_timeout_seconds": 1800
+      },
+      "inherit_parent_env": true,
+      "allowed_env": [
+        "CARGO_TERM_COLOR",
+        "RUSTFLAGS"
+      ],
+      "usage_examples": [
+        "cargo test",
+        "cargo clippy --all-targets --all-features -- -D warnings"
+      ]
+    },
+    {
+      "name": "curl",
+      "description": "Call HTTP APIs when a repository workflow requires it.",
+      "executable": "curl",
+      "default_args": [],
+      "state": "stable",
+      "supports_json": false,
+      "timeout_policy": {
+        "soft_timeout_seconds": 30,
+        "hard_timeout_seconds": 120
+      },
+      "inherit_parent_env": true,
+      "allowed_env": [
+        "LINEAR_API_KEY"
+      ],
+      "usage_examples": [
+        "curl -sS https://api.linear.app/graphql"
+      ]
+    },
+    {
+      "name": "find",
+      "description": "Inspect repository files with deterministic shell pipelines.",
+      "executable": "find",
+      "default_args": [],
+      "state": "stable",
+      "supports_json": false,
+      "timeout_policy": {
+        "soft_timeout_seconds": 10,
+        "hard_timeout_seconds": 30
+      },
+      "inherit_parent_env": true,
+      "allowed_env": [],
+      "usage_examples": [
+        "find runs -maxdepth 2 -type f | sort"
+      ]
+    },
+    {
+      "name": "gh",
+      "description": "Interact with GitHub pull requests, checks, and comments.",
+      "executable": "gh",
+      "default_args": [],
+      "state": "stable",
+      "supports_json": true,
+      "timeout_policy": {
+        "soft_timeout_seconds": 30,
+        "hard_timeout_seconds": 180
+      },
+      "inherit_parent_env": true,
+      "allowed_env": [
+        "GH_TOKEN",
+        "GITHUB_TOKEN"
+      ],
+      "usage_examples": [
+        "gh pr view --json number,state,url",
+        "gh api repos/{owner}/{repo}/pulls/<pr_number>/comments"
+      ]
+    },
+    {
+      "name": "git",
+      "description": "Inspect and mutate repository history for bounded workflow tasks.",
+      "executable": "git",
+      "default_args": [],
+      "state": "stable",
+      "supports_json": false,
+      "timeout_policy": {
+        "soft_timeout_seconds": 30,
+        "hard_timeout_seconds": 300
+      },
+      "inherit_parent_env": true,
+      "allowed_env": [
+        "GIT_AUTHOR_NAME",
+        "GIT_AUTHOR_EMAIL",
+        "GIT_COMMITTER_NAME",
+        "GIT_COMMITTER_EMAIL"
+      ],
+      "usage_examples": [
+        "git status",
+        "git -c merge.conflictstyle=zdiff3 merge origin/main"
+      ]
+    },
+    {
+      "name": "python3",
+      "description": "Run repository-owned helper scripts and deterministic validation helpers.",
+      "executable": "python3",
+      "default_args": [],
+      "state": "stable",
+      "supports_json": true,
+      "timeout_policy": {
+        "soft_timeout_seconds": 30,
+        "hard_timeout_seconds": 120
+      },
+      "inherit_parent_env": true,
+      "allowed_env": [
+        "PYTHONPATH"
+      ],
+      "usage_examples": [
+        "python3 .codex/skills/land/land_watch.py"
+      ]
+    },
+    {
+      "name": "rg",
+      "description": "Search repository text quickly with deterministic output ordering controls.",
+      "executable": "rg",
+      "default_args": [],
+      "state": "stable",
+      "supports_json": false,
+      "timeout_policy": {
+        "soft_timeout_seconds": 10,
+        "hard_timeout_seconds": 30
+      },
+      "inherit_parent_env": true,
+      "allowed_env": [],
+      "usage_examples": [
+        "rg -n \"issue_id=<issue-id>\" log/agent-runtime.log*"
+      ]
+    },
+    {
+      "name": "sort",
+      "description": "Stabilize shell pipeline output when inspection needs deterministic ordering.",
+      "executable": "sort",
+      "default_args": [],
+      "state": "stable",
+      "supports_json": false,
+      "timeout_policy": {
+        "soft_timeout_seconds": 10,
+        "hard_timeout_seconds": 30
+      },
+      "inherit_parent_env": true,
+      "allowed_env": [],
+      "usage_examples": [
+        "rg -o \"session_id=[^ ;]+\" log/agent-runtime.log* | sort -u"
+      ]
+    }
+  ]
+}

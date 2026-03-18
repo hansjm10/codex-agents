@@ -99,6 +99,7 @@ CLI capability layer:
 - command execution wrappers
 - output normalization
 - timeout and environment guards
+- committed repository-owned manifest data in `manifests/tools.json`
 
 Rules:
 
@@ -113,6 +114,7 @@ Guidance assets for agents:
 - skill metadata
 - usage guidance for tools
 - examples and guardrails
+- validation of `.codex/skills/*/SKILL.md` against the committed tool manifest
 
 Rules:
 

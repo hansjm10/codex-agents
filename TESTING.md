@@ -42,6 +42,7 @@ Focus:
 - timeout handling
 - cwd and env handling
 - JSON output normalization
+- deterministic command fixtures that exercise the real wrapper policy surface
 
 ### Skill Validation Tests
 
@@ -50,6 +51,7 @@ Focus:
 - referenced tools actually exist in the manifest
 - examples remain aligned with the real CLI surface
 - forbidden or deprecated commands are caught early
+- repository-owned `SKILL.md` files validate against `manifests/tools.json`
 
 ### Codex Adapter Tests
 
