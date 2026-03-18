@@ -2,10 +2,10 @@ use std::collections::BTreeMap;
 
 use codex_agents::{
     AgentEvent, AgentEventPayload, AgentResult, AgentResultStatus, ArtifactIndex, ArtifactKind,
-    ArtifactRef, Assignment, AssignmentConstraints, CheckOutcome, CodexOutputFormat,
-    CodexOutputRef, HarnessResult, HarnessStatus, LogRef, LogStream, NetworkPolicy,
-    ParameterSchema, RunState, SandboxPolicy, SchemaFormat, SkillPackRef, SkillPackScope,
-    TestResult, TimeoutPolicy, ToolSpec, ValidationStatus, WorkItemRef,
+    ArtifactRef, Assignment, AssignmentConstraints, CheckOutcome, CheckResult, CodexOutputFormat,
+    CodexOutputRef, HarnessReplayRecord, HarnessResult, HarnessStatus, LogRef, LogStream,
+    NetworkPolicy, ParameterSchema, RunState, SandboxPolicy, SchemaFormat, SkillPackRef,
+    SkillPackScope, TimeoutPolicy, ToolSpec, ValidationStatus, WorkItemRef,
 };
 use schemars::schema_for;
 
@@ -94,7 +94,7 @@ fn harness_result_schema_exposes_required_evidence_surfaces() {
         .as_ref()
         .expect("harness result object");
 
-    assert!(root.properties.contains_key("test_results"));
+    assert!(root.properties.contains_key("check_results"));
     assert!(root.properties.contains_key("codex_output_refs"));
     assert!(root.properties.contains_key("log_refs"));
     assert!(root.properties.contains_key("artifact_index"));
@@ -137,6 +137,10 @@ fn agent_result_round_trips_with_harness_result() {
     assert_eq!(
         value["harness_result"]["codex_output_refs"][0]["artifact_id"],
         "codex-md"
+    );
+    assert_eq!(
+        value["harness_result"]["check_results"][0]["status"],
+        "passed"
     );
     assert_eq!(
         value["harness_result"]["artifact_index"]["artifact_refs"][0]["kind"],
@@ -196,11 +200,12 @@ fn sample_harness_result() -> HarnessResult {
     HarnessResult {
         status: HarnessStatus::Passed,
         failing_checks: Vec::new(),
-        test_results: vec![TestResult {
+        check_results: vec![CheckResult {
             name: "cargo test".to_string(),
             status: CheckOutcome::Passed,
             command: vec!["cargo".to_string(), "test".to_string()],
             duration_ms: Some(14_250),
+            exit_code: Some(0),
             stdout_artifact_id: Some("cargo-test-json".to_string()),
             stderr_artifact_id: Some("stderr-log".to_string()),
         }],
@@ -219,4 +224,20 @@ fn sample_harness_result() -> HarnessResult {
         summary_for_next_agent: "Inspect `cargo-test-json` first if validation regresses."
             .to_string(),
     }
+}
+
+#[test]
+fn harness_replay_record_round_trips_for_machine_readable_replay() {
+    let replay_record = HarnessReplayRecord {
+        run_id: "run-17".to_string(),
+        assignment_id: "assignment-42".to_string(),
+        harness_result: sample_harness_result(),
+    };
+
+    let value = serde_json::to_value(&replay_record).expect("replay record should serialize");
+    let round_trip: HarnessReplayRecord =
+        serde_json::from_value(value.clone()).expect("replay record should deserialize");
+
+    assert_eq!(round_trip, replay_record);
+    assert_eq!(value["harness_result"]["status"], "passed");
 }

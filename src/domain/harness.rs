@@ -16,7 +16,7 @@ pub struct HarnessResult {
     pub status: HarnessStatus,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub failing_checks: Vec<String>,
-    pub test_results: Vec<TestResult>,
+    pub check_results: Vec<CheckResult>,
     pub codex_output_refs: Vec<CodexOutputRef>,
     pub log_refs: Vec<LogRef>,
     pub artifact_index: ArtifactIndex,
@@ -24,13 +24,15 @@ pub struct HarnessResult {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-pub struct TestResult {
+pub struct CheckResult {
     pub name: String,
     pub status: CheckOutcome,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub command: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub duration_ms: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub exit_code: Option<i32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub stdout_artifact_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -146,4 +148,11 @@ pub struct ArtifactRef {
     pub description: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub byte_length: Option<u64>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct HarnessReplayRecord {
+    pub run_id: String,
+    pub assignment_id: String,
+    pub harness_result: HarnessResult,
 }
