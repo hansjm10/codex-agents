@@ -1,4 +1,12 @@
+mod baseline;
+
+pub use baseline::{
+    BaselineHarnessRequest, BaselineHarnessRun, BaselineHarnessRunner, GeneratedArtifact,
+    HarnessRunError, ValidationCheck, ValidationExecution, ValidationExecutor,
+};
+
 pub use crate::domain::{
-    ArtifactGroup, ArtifactIndex, ArtifactKind, ArtifactRef, CheckOutcome, CodexOutputFormat,
-    CodexOutputRef, HarnessResult, HarnessStatus, LogRef, LogStream, TestResult,
+    ArtifactGroup, ArtifactIndex, ArtifactKind, ArtifactRef, CheckOutcome, CheckResult,
+    CodexOutputFormat, CodexOutputRef, HarnessReplayRecord, HarnessResult, HarnessStatus, LogRef,
+    LogStream,
 };
