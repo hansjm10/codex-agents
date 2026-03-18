@@ -34,6 +34,8 @@ Pure domain contracts:
 - `AssignmentConstraints`
 - `AgentEvent`
 - `AgentResult`
+- `HarnessResult`
+- `ArtifactIndex`
 - `ToolSpec`
 - `SkillPackRef`
 
@@ -71,7 +73,9 @@ Rules:
 
 - harness output should be machine-readable first
 - failing results must preserve enough evidence for a later agent run to debug
-- the harness should expose test results, Codex outputs, logs, and artifacts through one coherent surface
+- the harness should produce the domain-level `HarnessResult` and `ArtifactIndex`
+  contracts that expose test results, Codex outputs, logs, and artifacts
+  through one coherent surface
 
 ### `src/codex/`
 
