@@ -5,7 +5,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SYMPHONY_DIR="${SYMPHONY_DIR:-/work/symphony/elixir}"
 MISE_BIN="${MISE_BIN:-/home/jordan/.local/bin/mise}"
-PORT="${SYMPHONY_PORT:-8080}"
+PORT="${SYMPHONY_PORT:-8081}"
 WORKFLOW_FILE="${WORKFLOW_FILE:-$ROOT_DIR/WORKFLOW.md}"
 ENV_FILE="${ENV_FILE:-$ROOT_DIR/.env}"
 
@@ -34,6 +34,13 @@ fi
 export LANG="${LANG:-C.UTF-8}"
 export LC_ALL="${LC_ALL:-C.UTF-8}"
 export ELIXIR_ERL_OPTIONS="${ELIXIR_ERL_OPTIONS:-+fnu}"
+
+if command -v ss >/dev/null 2>&1; then
+  if ss -ltnH | awk -v port="$PORT" '$4 ~ (":" port "$") || $4 ~ ("\\]:" port "$") { found=1 } END { exit(found ? 0 : 1) }'; then
+    echo "Symphony port $PORT is already in use. Set SYMPHONY_PORT to a free port and retry." >&2
+    exit 1
+  fi
+fi
 
 cd "$SYMPHONY_DIR"
 exec "$MISE_BIN" exec -- ./bin/symphony \

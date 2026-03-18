@@ -23,6 +23,9 @@ workspace:
 hooks:
   after_create: |
     git clone --depth 1 https://github.com/hansjm10/codex-agents .
+    if command -v cargo >/dev/null 2>&1 && [ -f Cargo.toml ]; then
+      cargo fetch
+    fi
 agent:
   max_concurrent_agents: 2
   max_turns: 12
