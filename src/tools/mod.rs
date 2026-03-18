@@ -311,7 +311,7 @@ impl ToolRunner {
         } else {
             ToolExecutionOutcome::Failed
         };
-        let json_output = if invocation.capture_json {
+        let json_output = if invocation.capture_json && outcome == ToolExecutionOutcome::Succeeded {
             Some(
                 serde_json::from_str(&stdout).map_err(|error| ToolExecutionError {
                     kind: ToolExecutionErrorKind::InvalidJsonOutput,

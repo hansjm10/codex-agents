@@ -181,6 +181,57 @@ fn tool_runner_returns_timed_out_outcome_when_process_exceeds_policy() {
     assert_eq!(result.exit_code, None);
 }
 
+#[test]
+fn tool_runner_does_not_try_to_parse_json_after_timeout() {
+    let repo_root = tempdir().expect("tempdir should exist");
+    write_manifest(
+        repo_root.path(),
+        r#"{
+  "version": 1,
+  "tools": [
+    {
+      "name": "python-json-timeout",
+      "description": "Run python for timeout testing with json capture.",
+      "executable": "python3",
+      "default_args": [],
+      "state": "stable",
+      "supports_json": true,
+      "timeout_policy": {
+        "soft_timeout_seconds": 1,
+        "hard_timeout_seconds": 1
+      },
+      "inherit_parent_env": true,
+      "allowed_env": [],
+      "usage_examples": [
+        "python3 -c 'import time; time.sleep(1)'"
+      ]
+    }
+  ]
+}"#,
+    );
+
+    let catalog = ToolManifestCatalog::load_from_repo(repo_root.path()).expect("manifest loads");
+    let runner = ToolRunner::new(catalog);
+    let cwd = tempdir().expect("cwd tempdir should exist");
+
+    let result = runner
+        .run(ToolInvocation {
+            tool_name: "python-json-timeout".to_string(),
+            cwd: cwd.path().to_path_buf(),
+            args: vec![
+                "-c".to_string(),
+                "import json, time; time.sleep(2); print(json.dumps({'late': True}))".to_string(),
+            ],
+            env: BTreeMap::new(),
+            timeout_override_seconds: None,
+            capture_json: true,
+        })
+        .expect("timeout should still return an execution result");
+
+    assert_eq!(result.outcome, ToolExecutionOutcome::TimedOut);
+    assert_eq!(result.json_output, None);
+}
+
 fn write_manifest(repo_root: &Path, contents: &str) {
     let manifest_dir = repo_root.join("manifests");
     fs::create_dir_all(&manifest_dir).expect("manifest directory should exist");
