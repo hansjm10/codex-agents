@@ -3,6 +3,9 @@
 Status: Draft v1 (Rust-first)
 Purpose: Define a Codex-backed agent harness and runtime that executes bounded assignments for an external orchestrator while using first-class CLI tools, repository-owned skills, and test-first validation surfaces.
 
+Documentation: Top-level files define the repository contract; `docs/` is the
+deeper system of record for knowledge ownership and harness evidence guidance.
+
 ## 1. Problem Statement
 
 This project exists to isolate agent execution from orchestration.
@@ -33,6 +36,10 @@ Important boundary:
 - this project is not primarily an MCP server
 
 The primary product is not merely “run Codex.” The primary product is a harness that lets Codex work reliably and lets later agents debug failures cheaply.
+
+That only works if the repository explains itself. Durable guidance belongs in
+versioned repository docs so a later run can inspect committed sources instead
+of reconstructing intent from chat history.
 
 ## 2. Goals and Non-Goals
 
@@ -238,6 +245,7 @@ This repository should not expose a public API that forces callers to understand
 This repository should follow a harness-first development model:
 
 - tests and validation are part of the product surface
+- logs, artifacts, and Codex outputs are product surfaces too
 - failures should produce reusable evidence instead of ephemeral terminal output
 - local harnesses should make the application or runtime legible to future agent runs
 - adding a new capability should usually include adding a way to validate and inspect it

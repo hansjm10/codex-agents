@@ -2,20 +2,32 @@
 
 This repository is the Codex-backed agent harness and runtime, not the orchestrator.
 
-## Primary Files
+## Read First
 
 - `SPEC.md`
   - Product and system specification for the harness-first runtime boundary.
-- `WORKFLOW.md`
-  - Agent execution contract, task envelope expectations, and run posture.
 - `ARCHITECTURE.md`
   - Intended module boundaries and dependency rules.
 - `STATEFLOW.md`
   - Repository-owned agent run lifecycle policy.
 - `TESTING.md`
   - Quality gates, harness philosophy, and planned test taxonomy.
-- `docs/`
-  - Repository knowledge base and system of record for deeper guidance.
+- `docs/index.md`
+  - Entry point to the deeper repository knowledge base.
+
+## Deeper Docs
+
+- `docs/core-beliefs.md`
+  - Core operating principles for this repository.
+- `docs/repository-knowledge-base.md`
+  - Where durable guidance belongs and how to keep docs legible.
+- `docs/harness-surfaces.md`
+  - How tests, artifacts, logs, and Codex outputs form the product surface.
+
+## Supporting File
+
+- `WORKFLOW.md`
+  - Agent execution contract, task envelope expectations, and run posture.
 
 ## Working Rules
 

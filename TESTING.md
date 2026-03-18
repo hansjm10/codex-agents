@@ -6,6 +6,7 @@ This repository does not have implementation yet, but the testing and harness ba
 
 - Contract stability matters more than clever internals.
 - Harnesses are product features, not support code.
+- Repository-local docs should explain the validation and evidence model before implementation complexity grows.
 - Tool behavior must be tested with deterministic fixtures where possible.
 - Skills must be validated against the real tool contract.
 - Codex integration should be isolated behind adapter-oriented tests.
@@ -106,3 +107,6 @@ This repository should follow a harness-engineering posture:
 - optimize for the next agent run being able to continue without human reconstruction
 
 The target is not just “tests pass.” The target is “an AI can tell what failed, why, and where the evidence lives.”
+
+For the deeper description of those evidence surfaces, see
+`docs/harness-surfaces.md`.

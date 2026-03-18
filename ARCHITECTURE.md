@@ -20,6 +20,10 @@ The harness is a first-class subsystem, not a test afterthought. The repository 
 - where are the artifacts?
 - what changed between the failing and passing run?
 
+The same legibility standard applies to repository docs: top-level files define
+the architecture boundary, and `docs/` carries the deeper operational guidance
+for evidence surfaces and repository knowledge ownership.
+
 ## Layering
 
 ### `src/domain/`
@@ -156,6 +160,7 @@ Thin operator and integration surface:
 - CLI tools are the default capability model.
 - MCP may exist later as an adapter, but it is not the core abstraction.
 - Repository-local docs should be the system of record; `AGENTS.md` is only the map.
+- Harness evidence expectations should stay explicit in committed docs, not in ad hoc operator knowledge.
 
 ## Initial Test Boundary Plan
 
