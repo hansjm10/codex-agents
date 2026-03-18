@@ -10,7 +10,7 @@ It is a repository-owned guidance document, not an implementation artifact.
 - The runtime loads the declared skills and allowed tool manifest.
 - The runtime starts a Codex-backed worker agent for that assignment.
 - The worker agent may use approved CLI tools to complete the work.
-- The runtime emits structured events and a terminal result envelope.
+- The runtime and harness emit structured events, validation outputs, and a terminal result envelope.
 
 ## Assignment Expectations
 
@@ -68,6 +68,7 @@ A completed run should return:
 - terminal run status
 - summary
 - artifacts
+- artifact index
 - validation outcomes
 - structured observations relevant to the caller
 
@@ -76,3 +77,10 @@ A blocked run should return:
 - terminal blocked status
 - structured blocker details
 - enough evidence for the caller to decide whether to retry, defer, or escalate
+
+A failed run should return:
+
+- terminal failed status
+- failing validation or runtime signals
+- references to Codex outputs, logs, and artifacts
+- a concise summary that the next agent run can use to debug quickly
