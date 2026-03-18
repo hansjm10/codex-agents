@@ -175,6 +175,7 @@ Representative fields:
 - `status`
 - `failing_checks`
 - `check_results`
+- `validation_result_refs`
 - `artifact_index`
 - `codex_output_refs`
 - `log_refs`

@@ -31,6 +31,7 @@ Focus:
 
 - validation orchestration
 - artifact indexing
+- evidence entrypoint ordering and validation-result references
 - test result normalization
 - summary generation for later agent debugging
 

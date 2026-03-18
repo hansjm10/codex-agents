@@ -6,7 +6,7 @@ pub use baseline::{
 };
 
 pub use crate::domain::{
-    ArtifactGroup, ArtifactIndex, ArtifactKind, ArtifactRef, CheckOutcome, CheckResult,
-    CodexOutputFormat, CodexOutputRef, HarnessReplayRecord, HarnessResult, HarnessStatus, LogRef,
-    LogStream,
+    ArtifactEntrypoint, ArtifactEntrypointRole, ArtifactGroup, ArtifactIndex, ArtifactKind,
+    ArtifactRef, CheckOutcome, CheckResult, CodexOutputFormat, CodexOutputRef, HarnessReplayRecord,
+    HarnessResult, HarnessStatus, LogRef, LogStream, ValidationResultRef,
 };

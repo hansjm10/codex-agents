@@ -5,8 +5,9 @@ use std::fmt;
 use serde::{Deserialize, Serialize};
 
 use crate::domain::{
-    ArtifactIndex, ArtifactKind, ArtifactRef, CheckOutcome, CheckResult, CodexOutputRef,
-    HarnessReplayRecord, HarnessResult, HarnessStatus, LogRef,
+    ArtifactEntrypoint, ArtifactEntrypointRole, ArtifactIndex, ArtifactKind, ArtifactRef,
+    CheckOutcome, CheckResult, CodexOutputRef, HarnessReplayRecord, HarnessResult, HarnessStatus,
+    LogRef, LogStream, ValidationResultRef,
 };
 
 const REPORT_ARTIFACT_ID: &str = "harness-report";
@@ -127,6 +128,7 @@ impl BaselineHarnessRunner {
         }
 
         let mut check_results = Vec::with_capacity(request.checks.len());
+        let mut validation_result_refs = Vec::with_capacity(request.checks.len());
         let mut generated_artifacts = Vec::with_capacity(request.checks.len() * 2 + 1);
         let mut generated_refs = Vec::with_capacity(request.checks.len() * 2 + 1);
         let mut failing_checks = Vec::new();
@@ -172,7 +174,7 @@ impl BaselineHarnessRunner {
                 generated_artifacts.push(artifact);
             }
 
-            check_results.push(CheckResult {
+            let result = CheckResult {
                 name: check.name.clone(),
                 status: execution.status,
                 command: check.command.clone(),
@@ -180,7 +182,9 @@ impl BaselineHarnessRunner {
                 exit_code: execution.exit_code,
                 stdout_artifact_id: Some(format!("check-{artifact_stem}-stdout")),
                 stderr_artifact_id: Some(format!("check-{artifact_stem}-stderr")),
-            });
+            };
+            validation_result_refs.push(validation_result_ref(&result));
+            check_results.push(result);
         }
 
         let report_artifact = ArtifactRef {
@@ -206,25 +210,32 @@ impl BaselineHarnessRunner {
             HarnessStatus::Failed
         };
 
-        let artifact_index = ArtifactIndex::new(
+        let entrypoints = build_entrypoints(
+            &validation_result_refs,
+            &request.codex_output_refs,
+            &request.log_refs,
+            REPORT_ARTIFACT_ID,
+        );
+        let artifact_index = ArtifactIndex::with_entrypoints(
             request
                 .artifact_refs
                 .iter()
                 .cloned()
                 .chain(generated_refs)
                 .collect(),
+            entrypoints,
         );
         let summary_for_next_agent = build_summary(
             status,
-            &request.checks,
-            &failing_checks,
-            &check_results,
+            request.checks.len(),
+            &validation_result_refs,
             REPORT_ARTIFACT_ID,
         );
         let harness_result = HarnessResult {
             status,
             failing_checks,
             check_results,
+            validation_result_refs,
             codex_output_refs: request.codex_output_refs,
             log_refs: request.log_refs,
             artifact_index,
@@ -354,37 +365,134 @@ fn generated_log_artifact(
 
 fn build_summary(
     status: HarnessStatus,
-    checks: &[ValidationCheck],
-    failing_checks: &[String],
-    check_results: &[CheckResult],
+    check_count: usize,
+    validation_result_refs: &[ValidationResultRef],
     report_artifact_id: &str,
 ) -> String {
     match status {
         HarnessStatus::Passed => format!(
-            "Validation passed for {} checks. Start with `{report_artifact_id}` to replay the harness surface if this regresses.",
-            checks.len()
+            "Validation passed for {check_count} checks. Start with `{}` and use `{report_artifact_id}` for the replay-ready report if this regresses.",
+            validation_result_refs
+                .first()
+                .map(|result| result.primary_artifact_id.as_str())
+                .unwrap_or(report_artifact_id)
         ),
         HarnessStatus::Failed => {
-            let first_failure = failing_checks
-                .first()
-                .and_then(|name| {
-                    check_results
-                        .iter()
-                        .find(|result| &result.name == name)
-                        .and_then(|result| result.stderr_artifact_id.as_deref())
-                })
+            let first_failure = validation_result_refs
+                .iter()
+                .find(|result| result.status == CheckOutcome::Failed)
+                .map(|result| result.primary_artifact_id.as_str())
                 .unwrap_or(report_artifact_id);
+            let failing_checks = validation_result_refs
+                .iter()
+                .filter(|result| result.status == CheckOutcome::Failed)
+                .map(|result| result.check_name.as_str())
+                .collect::<Vec<_>>();
 
             format!(
                 "Validation failed for {} of {} checks: {}. Inspect `{first_failure}` first, then `{report_artifact_id}` for the replay-ready report.",
                 failing_checks.len(),
-                checks.len(),
+                check_count,
                 failing_checks.join(", ")
             )
         }
         HarnessStatus::Blocked => {
             format!("Harness execution is blocked. Inspect `{report_artifact_id}` for details.")
         }
+    }
+}
+
+fn validation_result_ref(result: &CheckResult) -> ValidationResultRef {
+    ValidationResultRef {
+        check_name: result.name.clone(),
+        status: result.status,
+        primary_artifact_id: primary_validation_artifact_id(result),
+        stdout_artifact_id: result.stdout_artifact_id.clone(),
+        stderr_artifact_id: result.stderr_artifact_id.clone(),
+    }
+}
+
+fn primary_validation_artifact_id(result: &CheckResult) -> String {
+    let preferred = match result.status {
+        CheckOutcome::Failed => result
+            .stderr_artifact_id
+            .as_ref()
+            .or(result.stdout_artifact_id.as_ref()),
+        _ => result
+            .stdout_artifact_id
+            .as_ref()
+            .or(result.stderr_artifact_id.as_ref()),
+    };
+
+    preferred
+        .cloned()
+        .unwrap_or_else(|| REPORT_ARTIFACT_ID.to_string())
+}
+
+fn build_entrypoints(
+    validation_result_refs: &[ValidationResultRef],
+    codex_output_refs: &[CodexOutputRef],
+    log_refs: &[LogRef],
+    report_artifact_id: &str,
+) -> Vec<ArtifactEntrypoint> {
+    let mut entrypoints = Vec::new();
+
+    if let Some(start_here) = validation_result_refs
+        .iter()
+        .find(|result| result.status == CheckOutcome::Failed)
+        .or_else(|| validation_result_refs.first())
+    {
+        entrypoints.push(ArtifactEntrypoint {
+            artifact_id: start_here.primary_artifact_id.clone(),
+            role: ArtifactEntrypointRole::StartHere,
+            label: format!(
+                "Start with the validation output for `{}`.",
+                start_here.check_name
+            ),
+        });
+    }
+
+    entrypoints.push(ArtifactEntrypoint {
+        artifact_id: report_artifact_id.to_string(),
+        role: ArtifactEntrypointRole::ReplayReport,
+        label: "Replay-ready harness report for the full run.".to_string(),
+    });
+
+    for result in validation_result_refs {
+        entrypoints.push(ArtifactEntrypoint {
+            artifact_id: result.primary_artifact_id.clone(),
+            role: ArtifactEntrypointRole::ValidationResult,
+            label: format!("Primary validation artifact for `{}`.", result.check_name),
+        });
+    }
+
+    for codex_output in codex_output_refs {
+        entrypoints.push(ArtifactEntrypoint {
+            artifact_id: codex_output.artifact_id.clone(),
+            role: ArtifactEntrypointRole::CodexOutput,
+            label: codex_output
+                .summary
+                .clone()
+                .unwrap_or_else(|| "Codex output artifact.".to_string()),
+        });
+    }
+
+    for log_ref in log_refs {
+        entrypoints.push(ArtifactEntrypoint {
+            artifact_id: log_ref.artifact_id.clone(),
+            role: ArtifactEntrypointRole::Log,
+            label: format!("{} log stream.", log_stream_label(log_ref.stream)),
+        });
+    }
+
+    entrypoints
+}
+
+fn log_stream_label(stream: LogStream) -> &'static str {
+    match stream {
+        LogStream::Stdout => "Stdout",
+        LogStream::Stderr => "Stderr",
+        LogStream::Structured => "Structured runtime",
     }
 }
 
