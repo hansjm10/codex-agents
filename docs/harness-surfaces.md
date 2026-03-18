@@ -18,6 +18,7 @@ The harness should preserve these surfaces in machine-readable form whenever
 possible:
 
 - validation results
+- validation result references with stable artifact ids
 - replay-ready harness reports
 - Codex outputs and summaries
 - tool invocation records
@@ -31,6 +32,8 @@ Evidence is only useful if a later agent can read it cheaply.
 
 - Prefer stable filenames, schemas, and result shapes.
 - Prefer one coherent artifact index over scattered ad hoc outputs.
+- Prefer explicit entrypoints that tell the next agent which artifact to inspect
+  first, then where the replay-ready report lives.
 - Prefer a single replay-ready report artifact that points at the rest of the
   evidence surface.
 - Include enough context for a later run to compare failing and passing states.

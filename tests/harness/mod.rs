@@ -5,8 +5,8 @@ use codex_agents::harness::{
     ValidationCheck, ValidationExecution, ValidationExecutor,
 };
 use codex_agents::{
-    ArtifactKind, ArtifactRef, CheckOutcome, CodexOutputFormat, CodexOutputRef,
-    HarnessReplayRecord, HarnessStatus, LogRef, LogStream,
+    ArtifactEntrypointRole, ArtifactKind, ArtifactRef, CheckOutcome, CodexOutputFormat,
+    CodexOutputRef, HarnessReplayRecord, HarnessStatus, LogRef, LogStream,
 };
 
 #[test]
@@ -57,12 +57,24 @@ fn baseline_runner_collates_passing_checks_into_one_replay_surface() {
         "runtime-structured-log"
     );
     assert_eq!(
+        run.harness_result().validation_result_refs[0].primary_artifact_id,
+        "check-01-cargo-fmt-check-stdout"
+    );
+    assert_eq!(
         run.harness_result()
             .artifact_index
             .get("harness-report")
             .expect("report artifact should be indexed")
             .kind,
         ArtifactKind::ValidationReport
+    );
+    assert_eq!(
+        run.harness_result().artifact_index.entrypoints[0].role,
+        ArtifactEntrypointRole::StartHere
+    );
+    assert_eq!(
+        run.harness_result().artifact_index.entrypoints[0].artifact_id,
+        "check-01-cargo-fmt-check-stdout"
     );
     assert!(
         run.harness_result()
@@ -107,6 +119,28 @@ fn baseline_runner_preserves_failing_check_evidence_for_later_debugging() {
         run.harness_result()
             .summary_for_next_agent
             .contains("check-02-cargo-test-stderr")
+    );
+    assert_eq!(
+        run.harness_result().validation_result_refs[1].primary_artifact_id,
+        "check-02-cargo-test-stderr"
+    );
+    assert_eq!(
+        run.harness_result().artifact_index.entrypoints[0].artifact_id,
+        "check-02-cargo-test-stderr"
+    );
+    assert_eq!(
+        run.harness_result().artifact_index.entrypoints[0].role,
+        ArtifactEntrypointRole::StartHere
+    );
+    assert!(
+        run.harness_result()
+            .artifact_index
+            .entrypoints
+            .iter()
+            .any(|entrypoint| {
+                entrypoint.role == ArtifactEntrypointRole::ReplayReport
+                    && entrypoint.artifact_id == "harness-report"
+            })
     );
 
     let stderr_artifact = run

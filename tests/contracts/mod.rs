@@ -1,11 +1,12 @@
 use std::collections::BTreeMap;
 
 use codex_agents::{
-    AgentEvent, AgentEventPayload, AgentResult, AgentResultStatus, ArtifactIndex, ArtifactKind,
-    ArtifactRef, Assignment, AssignmentConstraints, CheckOutcome, CheckResult, CodexOutputFormat,
-    CodexOutputRef, HarnessReplayRecord, HarnessResult, HarnessStatus, LogRef, LogStream,
-    NetworkPolicy, ParameterSchema, RunState, SandboxPolicy, SchemaFormat, SkillPackRef,
-    SkillPackScope, TimeoutPolicy, ToolSpec, ValidationStatus, WorkItemRef,
+    AgentEvent, AgentEventPayload, AgentResult, AgentResultStatus, ArtifactEntrypoint,
+    ArtifactEntrypointRole, ArtifactIndex, ArtifactKind, ArtifactRef, Assignment,
+    AssignmentConstraints, CheckOutcome, CheckResult, CodexOutputFormat, CodexOutputRef,
+    HarnessReplayRecord, HarnessResult, HarnessStatus, LogRef, LogStream, NetworkPolicy,
+    ParameterSchema, RunState, SandboxPolicy, SchemaFormat, SkillPackRef, SkillPackScope,
+    TimeoutPolicy, ToolSpec, ValidationResultRef, ValidationStatus, WorkItemRef,
 };
 use schemars::schema_for;
 
@@ -95,6 +96,7 @@ fn harness_result_schema_exposes_required_evidence_surfaces() {
         .expect("harness result object");
 
     assert!(root.properties.contains_key("check_results"));
+    assert!(root.properties.contains_key("validation_result_refs"));
     assert!(root.properties.contains_key("codex_output_refs"));
     assert!(root.properties.contains_key("log_refs"));
     assert!(root.properties.contains_key("artifact_index"));
@@ -112,6 +114,7 @@ fn artifact_index_schema_exposes_artifact_refs() {
 
     assert!(root.properties.contains_key("artifact_refs"));
     assert!(root.properties.contains_key("groups"));
+    assert!(root.properties.contains_key("entrypoints"));
 }
 
 #[test]
@@ -167,35 +170,63 @@ fn artifact_index_groups_artifacts_by_kind_for_machine_readable_debugging() {
         .expect("log group should exist");
 
     assert_eq!(log_group.artifact_ids, vec!["stderr-log".to_string()]);
+
+    assert_eq!(
+        artifact_index.entrypoints[0],
+        ArtifactEntrypoint {
+            artifact_id: "cargo-test-json".to_string(),
+            role: ArtifactEntrypointRole::StartHere,
+            label: "Start with the validation output for `cargo test`.".to_string(),
+        }
+    );
 }
 
 fn sample_harness_result() -> HarnessResult {
-    let artifact_index = ArtifactIndex::new(vec![
-        ArtifactRef {
-            artifact_id: "codex-md".to_string(),
-            kind: ArtifactKind::CodexOutput,
-            path: "artifacts/codex/final.md".to_string(),
-            media_type: Some("text/markdown".to_string()),
-            description: Some("Final Codex report".to_string()),
-            byte_length: Some(1_024),
-        },
-        ArtifactRef {
-            artifact_id: "stderr-log".to_string(),
-            kind: ArtifactKind::Log,
-            path: "artifacts/logs/stderr.log".to_string(),
-            media_type: Some("text/plain".to_string()),
-            description: Some("Captured stderr".to_string()),
-            byte_length: Some(512),
-        },
-        ArtifactRef {
-            artifact_id: "cargo-test-json".to_string(),
-            kind: ArtifactKind::TestOutput,
-            path: "artifacts/tests/cargo-test.json".to_string(),
-            media_type: Some("application/json".to_string()),
-            description: Some("cargo test JSON output".to_string()),
-            byte_length: Some(2_048),
-        },
-    ]);
+    let artifact_index = ArtifactIndex::with_entrypoints(
+        vec![
+            ArtifactRef {
+                artifact_id: "codex-md".to_string(),
+                kind: ArtifactKind::CodexOutput,
+                path: "artifacts/codex/final.md".to_string(),
+                media_type: Some("text/markdown".to_string()),
+                description: Some("Final Codex report".to_string()),
+                byte_length: Some(1_024),
+            },
+            ArtifactRef {
+                artifact_id: "stderr-log".to_string(),
+                kind: ArtifactKind::Log,
+                path: "artifacts/logs/stderr.log".to_string(),
+                media_type: Some("text/plain".to_string()),
+                description: Some("Captured stderr".to_string()),
+                byte_length: Some(512),
+            },
+            ArtifactRef {
+                artifact_id: "cargo-test-json".to_string(),
+                kind: ArtifactKind::TestOutput,
+                path: "artifacts/tests/cargo-test.json".to_string(),
+                media_type: Some("application/json".to_string()),
+                description: Some("cargo test JSON output".to_string()),
+                byte_length: Some(2_048),
+            },
+        ],
+        vec![
+            ArtifactEntrypoint {
+                artifact_id: "cargo-test-json".to_string(),
+                role: ArtifactEntrypointRole::StartHere,
+                label: "Start with the validation output for `cargo test`.".to_string(),
+            },
+            ArtifactEntrypoint {
+                artifact_id: "codex-md".to_string(),
+                role: ArtifactEntrypointRole::CodexOutput,
+                label: "Final Codex completion summary.".to_string(),
+            },
+            ArtifactEntrypoint {
+                artifact_id: "stderr-log".to_string(),
+                role: ArtifactEntrypointRole::Log,
+                label: "Captured stderr for the run.".to_string(),
+            },
+        ],
+    );
 
     HarnessResult {
         status: HarnessStatus::Passed,
@@ -206,6 +237,13 @@ fn sample_harness_result() -> HarnessResult {
             command: vec!["cargo".to_string(), "test".to_string()],
             duration_ms: Some(14_250),
             exit_code: Some(0),
+            stdout_artifact_id: Some("cargo-test-json".to_string()),
+            stderr_artifact_id: Some("stderr-log".to_string()),
+        }],
+        validation_result_refs: vec![ValidationResultRef {
+            check_name: "cargo test".to_string(),
+            status: CheckOutcome::Passed,
+            primary_artifact_id: "cargo-test-json".to_string(),
             stdout_artifact_id: Some("cargo-test-json".to_string()),
             stderr_artifact_id: Some("stderr-log".to_string()),
         }],

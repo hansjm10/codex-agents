@@ -11,7 +11,7 @@ pub use assignment::{
     SkillPackRef, SkillPackScope, TimeoutPolicy, ToolSpec, WorkItemRef,
 };
 pub use harness::{
-    ArtifactGroup, ArtifactIndex, ArtifactKind, ArtifactRef, CheckOutcome, CheckResult,
-    CodexOutputFormat, CodexOutputRef, HarnessReplayRecord, HarnessResult, HarnessStatus, LogRef,
-    LogStream,
+    ArtifactEntrypoint, ArtifactEntrypointRole, ArtifactGroup, ArtifactIndex, ArtifactKind,
+    ArtifactRef, CheckOutcome, CheckResult, CodexOutputFormat, CodexOutputRef, HarnessReplayRecord,
+    HarnessResult, HarnessStatus, LogRef, LogStream, ValidationResultRef,
 };

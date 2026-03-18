@@ -17,6 +17,8 @@ pub struct HarnessResult {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub failing_checks: Vec<String>,
     pub check_results: Vec<CheckResult>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub validation_result_refs: Vec<ValidationResultRef>,
     pub codex_output_refs: Vec<CodexOutputRef>,
     pub log_refs: Vec<LogRef>,
     pub artifact_index: ArtifactIndex,
@@ -74,6 +76,17 @@ pub struct LogRef {
     pub line_count: Option<u64>,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct ValidationResultRef {
+    pub check_name: String,
+    pub status: CheckOutcome,
+    pub primary_artifact_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stdout_artifact_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stderr_artifact_id: Option<String>,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum LogStream {
@@ -87,10 +100,19 @@ pub struct ArtifactIndex {
     pub artifact_refs: Vec<ArtifactRef>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub groups: Vec<ArtifactGroup>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub entrypoints: Vec<ArtifactEntrypoint>,
 }
 
 impl ArtifactIndex {
     pub fn new(artifact_refs: Vec<ArtifactRef>) -> Self {
+        Self::with_entrypoints(artifact_refs, Vec::new())
+    }
+
+    pub fn with_entrypoints(
+        artifact_refs: Vec<ArtifactRef>,
+        entrypoints: Vec<ArtifactEntrypoint>,
+    ) -> Self {
         let mut grouped_ids: BTreeMap<ArtifactKind, Vec<String>> = BTreeMap::new();
 
         for artifact in &artifact_refs {
@@ -108,6 +130,7 @@ impl ArtifactIndex {
         Self {
             artifact_refs,
             groups,
+            entrypoints,
         }
     }
 
@@ -122,6 +145,23 @@ impl ArtifactIndex {
 pub struct ArtifactGroup {
     pub kind: ArtifactKind,
     pub artifact_ids: Vec<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct ArtifactEntrypoint {
+    pub artifact_id: String,
+    pub role: ArtifactEntrypointRole,
+    pub label: String,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ArtifactEntrypointRole {
+    StartHere,
+    ReplayReport,
+    ValidationResult,
+    CodexOutput,
+    Log,
 }
 
 #[derive(
