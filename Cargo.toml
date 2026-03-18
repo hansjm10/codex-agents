@@ -1,0 +1,13 @@
+[package]
+name = "codex-agents"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "codex_agents"
+path = "src/lib.rs"
+
+[dependencies]
+schemars = { version = "0.8.22", features = ["derive"] }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"

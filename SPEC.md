@@ -162,9 +162,8 @@ Representative fields:
 
 - `status`
 - `summary`
-- `artifacts`
 - `observations`
-- `validation_results`
+- `harness_result`
 - `final_message`
 
 ### 4.4 Harness Result
@@ -175,7 +174,7 @@ Representative fields:
 
 - `status`
 - `failing_checks`
-- `passing_checks`
+- `test_results`
 - `artifact_index`
 - `codex_output_refs`
 - `log_refs`
