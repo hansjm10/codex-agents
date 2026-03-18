@@ -53,6 +53,8 @@ Execution coordination inside a single agent run:
 - event emission
 - assignment validation
 - result collation
+- baseline execution path that runs one Codex session and then hands normalized
+  artifacts into the harness layer
 
 Rules:
 
@@ -85,6 +87,8 @@ Codex integration boundary:
 - prompt assembly
 - event normalization
 - output capture
+- normalization of Codex session items into harness-facing artifact and log
+  references while keeping raw session details inside this layer
 
 Rules:
 

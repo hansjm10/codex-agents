@@ -63,6 +63,8 @@ Focus:
 - structured output handling
 - failure mode mapping
 - artifact/log references emitted by Codex runs
+- stable normalization of Codex session items into harness-facing output, log,
+  and artifact surfaces
 
 ### Agent Runtime Tests
 
@@ -71,6 +73,8 @@ Focus:
 - assignment lifecycle transitions
 - event emission ordering
 - blocked, failed, and completed result paths
+- one bounded assignment executing through the Codex adapter and into the
+  harness result surface
 
 ### CLI Smoke Tests
 
