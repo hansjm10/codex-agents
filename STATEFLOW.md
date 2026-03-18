@@ -80,3 +80,4 @@ The run was intentionally stopped by the caller or supervising system.
 - The orchestrator may map these run states into its own runtime model, but this repository should keep its own local lifecycle explicit.
 - A blocked run should always include structured blocker information.
 - Completed should require an explicit terminal result, not just absence of new output.
+- Validation and terminal states should leave behind inspectable evidence surfaces such as result summaries, logs, and artifact references for later agent runs.
